@@ -86,16 +86,23 @@ module Embulk
             @task['column_types'].each_with_index do |type, index|
               if record[index].nil?
                 javaType = case type
+                           # Had lots of trouble referencing the java types directly, so hackily trying it
+                           # just using the integer values themselves directly
                            when 'integer' then
-                             java.sql.Types.INTEGER
+                             4
+                             # java.sql.Types.INTEGER
                            when 'string' then
-                             java.sql.Types.VARCHAR
+                             12
+                             # java.sql.Types.VARCHAR
                            when 'timestamp' then
-                             java.sql.Types.TIMESTAMP
+                             93
+                             # java.sql.Types.TIMESTAMP
                            when 'double' then
-                             java.sql.Types.DOUBLE
+                             8
+                             # java.sql.Types.DOUBLE
                            else
-                             java.sql.Types.VARCHAR
+                             12
+                             # java.sql.Types.VARCHAR
                            end
 
                 prep.setNull(index+1, javaType)
