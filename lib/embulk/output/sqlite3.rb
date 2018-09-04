@@ -1,6 +1,8 @@
 module Embulk
   module Output
     require 'jdbc/sqlite3'
+    require 'java'
+
     Jdbc::SQLite3.load_driver
 
     class Sqlite3OutputPlugin < OutputPlugin
@@ -83,7 +85,20 @@ module Embulk
 
             @task['column_types'].each_with_index do |type, index|
               if record[index].nil?
-                prep.setNull(index+1)
+                javaType = case type
+                           when 'integer' then
+                             java.sql.Types.INTEGER
+                           when 'string' then
+                             java.sql.Types.VARCHAR
+                           when 'timestamp' then
+                             java.sql.Types.TIMESTAMP
+                           when 'double' then
+                             java.sql.Types.DOUBLE
+                           else
+                             java.sql.Types.VARCHAR
+                           end
+
+                prep.setNull(index+1, javaType)
               else
                 case type
                 when 'integer' then
