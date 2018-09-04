@@ -82,17 +82,21 @@ module Embulk
           page.each do |record|
 
             @task['column_types'].each_with_index do |type, index|
-              case type
-              when 'integer' then
-                prep.setInt(index+1, record[index])
-              when 'string' then
-                prep.setString(index+1, record[index])
-              when 'timestamp' then
-                prep.setString(index+1, record[index].to_s)
-              when 'double' then
-                prep.setString(index+1, record[index].to_f)
+              if record[index].nil?
+                prep.setNull(index+1)
               else
-                prep.setString(index+1, record[index].to_s)
+                case type
+                when 'integer' then
+                  prep.setInt(index+1, record[index])
+                when 'string' then
+                  prep.setString(index+1, record[index])
+                when 'timestamp' then
+                  prep.setString(index+1, record[index].to_s)
+                when 'double' then
+                  prep.setString(index+1, record[index].to_f)
+                else
+                  prep.setString(index+1, record[index].to_s)
+                end
               end
             end
 
