@@ -77,6 +77,11 @@ module Embulk
         end
       end
 
+      # To ensure this is available both on the class and instance
+      def retry_sqlite_errors(num_attempts=5, attempt_number=1, &block)
+        self.class.retry_sqlite_errors(num_attempts=num_attempts, attempt_number=attempt_number) { block.call }
+      end
+
       def self.execute_sql(sqlite, sql, *args)
         retry_sqlite_errors do
           stmt = sqlite.createStatement
