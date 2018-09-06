@@ -60,7 +60,7 @@ module Embulk
         sqlite
       end
 
-      def self.execute_sql(sqlite, sql, *args, attempt_number=1)
+      def self.execute_sql(sqlite, sql, attempt_number=1, *args)
         stmt = sqlite.createStatement
         begin
           stmt.execute(sql)
@@ -68,7 +68,9 @@ module Embulk
           if e.message.include? '[SQLITE_BUSY]'  # This is the message raised by the underlying sqlite
             if attempt_number <= 5 # Retry up to 5 times. Maybe make this configurable in the YAML?
               sleep(rand(4))
-              self.execute_sql(sqlite, sql, *args, attempt_number=attempt_number+1)
+              self.execute_sql(sqlite, sql, attempt_number=attempt_number+1, *args)
+            else
+              raise
             end
           else
             raise
