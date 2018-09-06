@@ -152,7 +152,9 @@ module Embulk
               end
             end
 
-            prep.execute
+            retry_sqlite_errors do
+              prep.execute
+            end
             @records += 1
           end
         ensure
