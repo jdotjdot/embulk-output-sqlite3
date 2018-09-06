@@ -60,7 +60,7 @@ module Embulk
         sqlite
       end
 
-      def self.retry_sqlite_errors(num_attempts=5, attempt_number=1, &block)
+      def retry_sqlite_errors(num_attempts=5, attempt_number=1, &block)
         begin
           block.call
         rescue => e
