@@ -78,7 +78,7 @@ module Embulk
       end
 
       def self.execute_sql(sqlite, sql, *args)
-        self.retry_sqlite_errors do
+        retry_sqlite_errors do
           stmt = sqlite.createStatement
           begin
             stmt.execute(sql)
@@ -99,7 +99,7 @@ module Embulk
 
       def add(page)
         prep = nil
-        self.retry_sqlite_errors do
+        retry_sqlite_errors do
           prep = @sqlite.prepareStatement(%[insert into #{@task['table']}(#{@task['columns'].join(',')}) values (#{@task['columns'].map{|c| '?' }.join(',')})])
         end
 
