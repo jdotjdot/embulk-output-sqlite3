@@ -60,23 +60,31 @@ module Embulk
         sqlite
       end
 
-      def self.execute_sql(sqlite, sql, attempt_number=1, *args)
-        stmt = sqlite.createStatement
+      def self.retry_sqlite_errors(num_attempts=5, attempt_number=1, &block)
         begin
-          stmt.execute(sql)
-        rescue => e  # PartialExecutionException is raised but comes from the java sqlite error
-          if e.message.include? '[SQLITE_BUSY]'  # This is the message raised by the underlying sqlite
-            if attempt_number <= 5 # Retry up to 5 times. Maybe make this configurable in the YAML?
+          block.call
+        rescue => e
+          if e.message.include? '[SQLITE_BUSY]'
+            if attempt_number <= num_attempts
               sleep(rand(4))
-              self.execute_sql(sqlite, sql, attempt_number=attempt_number+1, *args)
+              self.retry_sqlite_errors(attempt_number=attempt_number+1) { block.call }
             else
               raise
             end
           else
             raise
           end
-        ensure
-          stmt.close
+        end
+      end
+
+      def self.execute_sql(sqlite, sql, *args)
+        self.retry_sqlite_errors do
+          stmt = sqlite.createStatement
+          begin
+            stmt.execute(sql)
+          ensure
+            stmt.close
+          end
         end
       end
 
@@ -90,7 +98,11 @@ module Embulk
       end
 
       def add(page)
-        prep = @sqlite.prepareStatement(%[insert into #{@task['table']}(#{@task['columns'].join(',')}) values (#{@task['columns'].map{|c| '?' }.join(',')})])
+        prep = nil
+        self.retry_sqlite_errors do
+          prep = @sqlite.prepareStatement(%[insert into #{@task['table']}(#{@task['columns'].join(',')}) values (#{@task['columns'].map{|c| '?' }.join(',')})])
+        end
+
         begin
           page.each do |record|
 
