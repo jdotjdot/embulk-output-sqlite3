@@ -116,6 +116,8 @@ module Embulk
                   prep.setString(index+1, record[index].to_s)
                 when 'double' then
                   prep.setString(index+1, record[index].to_f)
+                when 'json' then
+                  prep.setString(index+1, record[index].to_json)
                 else
                   prep.setString(index+1, record[index].to_s)
                 end
