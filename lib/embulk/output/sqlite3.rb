@@ -60,10 +60,19 @@ module Embulk
         sqlite
       end
 
-      def self.execute_sql(sqlite, sql, *args)
+      def self.execute_sql(sqlite, sql, *args, attempt_number=1)
         stmt = sqlite.createStatement
         begin
           stmt.execute(sql)
+        rescue => e  # PartialExecutionException is raised but comes from the java sqlite error
+          if e.message.include? '[SQLITE_BUSY]'  # This is the message raised by the underlying sqlite
+            if attempt_number <= 5 # Retry up to 5 times. Maybe make this configurable in the YAML?
+              sleep(rand(4))
+              self.execute_sql(sqlite, sql, *args, attempt_number=attempt_number+1)
+            end
+          else
+            raise
+          end
         ensure
           stmt.close
         end
