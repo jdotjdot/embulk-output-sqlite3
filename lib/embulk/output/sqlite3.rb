@@ -60,14 +60,14 @@ module Embulk
         sqlite
       end
 
-      def retry_sqlite_errors(num_attempts=5, attempt_number=1, &block)
+      def self.retry_sqlite_errors(num_attempts=5, attempt_number=1, &block)
         begin
           block.call
         rescue => e
           if e.message.include? '[SQLITE_BUSY]'
             if attempt_number <= num_attempts
               sleep(rand(4))
-              self.retry_sqlite_errors(attempt_number=attempt_number+1) { block.call }
+              retry_sqlite_errors(attempt_number=attempt_number+1) { block.call }
             else
               raise
             end
